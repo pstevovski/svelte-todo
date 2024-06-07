@@ -1,5 +1,5 @@
 <script>
-  import { Trash2 } from "lucide-svelte";
+  import { Trash2, CircleCheck, CircleX } from "lucide-svelte";
   import { Toaster, toast } from "svelte-sonner";
   import { format } from "date-fns";
   import { onMount } from "svelte";
@@ -31,6 +31,7 @@
       {
         text: todoTextField.value,
         created_at: new Date(),
+        is_completed: false,
       },
     ];
 
@@ -42,6 +43,7 @@
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
+  // todo: make it work based on index
   function handleTodoRemove(todo) {
     const todoToBeRemoved = todos.findIndex((existingTodo) => {
       return existingTodo.text.toLowerCase() === todo.text.toLowerCase();
@@ -62,6 +64,13 @@
 
     // update the todos list
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
+  }
+
+  function handleTodoToggleStatus(todoIndex) {
+    const updatedTodos = [...todos];
+    updatedTodos[todoIndex].is_completed =
+      !updatedTodos[todoIndex].is_completed;
+    todos = updatedTodos;
   }
 
   // todo: presist in local storage [x]
@@ -103,14 +112,27 @@
 
     {#if todos.length > 0}
       <ul>
-        {#each todos as todo}
+        {#each todos as todo, todoIndex}
           <li class="p-2">
-            <div class="flex items-center justify-between">
+            <div
+              class={`flex items-center justify-between ${todo.is_completed ? "line-through decoration-slate-500" : ""}`}
+            >
               <span class="text-slate-500">{todo.text}</span>
-              <button
-                class="text-red-500"
-                on:click={() => handleTodoRemove(todo)}><Trash2 /></button
-              >
+
+              <div class="flex items-center">
+                <button on:click={() => handleTodoToggleStatus(todoIndex)}>
+                  {#if !todo.is_completed}
+                    <CircleCheck class="text-emerald-400" />
+                  {:else}
+                    <CircleX />
+                  {/if}
+                </button>
+                <button
+                  class="text-red-500"
+                  on:click={() => handleTodoRemove(todoIndex)}
+                  ><Trash2 /></button
+                >
+              </div>
             </div>
             <span class="text-xs text-slate-400"
               ><em>Created: {format(todo.created_at, "MM/dd/yyyy")}</em></span
