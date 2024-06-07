@@ -2,9 +2,16 @@
   import { Trash2 } from "lucide-svelte";
   import { Toaster, toast } from "svelte-sonner";
   import { format } from "date-fns";
+  import { onMount } from "svelte";
 
   let todos = [];
   let todoText = "";
+
+  onMount(() => {
+    // read todos from local storage
+    const savedTodos = JSON.parse(localStorage.getItem("svelte-todos")) || [];
+    todos = savedTodos;
+  });
 
   function handleTodoAdd(event) {
     event.preventDefault();
@@ -30,11 +37,14 @@
     // clear out the field
     todoTextField.value = "";
     toast.success("New todo added to the list!");
+
+    // save to local storage
+    localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
   function handleTodoRemove(todo) {
     const todoToBeRemoved = todos.findIndex((existingTodo) => {
-      return existingTodo.toLowerCase() === todo.toLowerCase();
+      return existingTodo.text.toLowerCase() === todo.text.toLowerCase();
     });
 
     // exit if item cannot be found
@@ -49,7 +59,17 @@
     updatedTodos.splice(todoToBeRemoved, 1);
     todos = updatedTodos;
     toast.success("Successfully removed todo!");
+
+    // update the todos list
+    localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
+
+  // todo: presist in local storage [x]
+  // todo: mark todos as completed / not completed
+  // todo: filter the list of todos:
+  // - all
+  // - only completed
+  // - only not completed
 
   $: {
     console.log("TODOS: ", todos);
