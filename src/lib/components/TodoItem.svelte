@@ -13,19 +13,19 @@
   <div
     class={`flex items-center justify-between ${todo.is_completed ? "line-through decoration-slate-500" : ""}`}
   >
-    <div class="flex items-center gap-x-3">
+    <div class="flex items-baseline gap-x-3">
       <input
         type="checkbox"
         name={`todo-item-${todoIndex}`}
         id={`todo-item-${todoIndex}`}
-        checked={todo.is_completed}
+        bind:checked={todo.is_completed}
         class="cursor-pointer"
         on:change={(event) =>
           dispatch("handleToggleStatus", { originalEvent: event })}
       />
       <label
         for={`todo-item-${todoIndex}`}
-        class="text-xl text-slate-500 cursor-pointer">{todo.text}</label
+        class="text-md text-slate-500 cursor-pointer">{todo.text}</label
       >
     </div>
 
