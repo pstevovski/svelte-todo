@@ -3,8 +3,10 @@
   import { Toaster, toast } from "svelte-sonner";
   import { format } from "date-fns";
   import { onMount } from "svelte";
+  import Badge from "./lib/components/Badge.svelte";
 
   let todos = [];
+  let activeFilter = "all";
   let todoText = "";
 
   onMount(() => {
@@ -66,10 +68,7 @@
 
   // todo: presist in local storage [x]
   // todo: mark todos as completed / not completed [x]
-  // todo: filter the list of todos:
-  // - all
-  // - only completed
-  // - only not completed
+  // todo: filter the list of todos: [x]
   // todo: check all todos at once
   // todo: add double confirmation modal for todo item removal
 
@@ -101,48 +100,84 @@
       >
     </form>
 
-    <hr class="mb-4" />
+    <hr />
 
-    {#if todos.length > 0}
-      <ul>
-        {#each todos as todo, todoIndex}
-          <li class="p-2">
-            <div
-              class={`flex items-center justify-between ${todo.is_completed ? "line-through decoration-slate-500" : ""}`}
-            >
-              <div class="flex items-center gap-x-3">
-                <input
-                  type="checkbox"
-                  name={`todo-item-${todoIndex}`}
-                  id={`todo-item-${todoIndex}`}
-                  checked={todo.is_completed}
-                  class="cursor-pointer"
-                  on:change={(event) => {
-                    handleTodoToggleStatus(event, todoIndex);
-                  }}
-                />
-                <label
-                  for={`todo-item-${todoIndex}`}
-                  class="text-xl text-slate-500 cursor-pointer"
-                  >{todo.text}</label
+    <div class="my-4">
+      {#if todos.length > 0}
+        <ul>
+          {#each todos as todo, todoIndex}
+            {#if activeFilter === "all" || (activeFilter === "active" && !todo.is_completed) || (activeFilter === "completed" && todo.is_completed)}
+              <li class="p-2">
+                <div
+                  class={`flex items-center justify-between ${todo.is_completed ? "line-through decoration-slate-500" : ""}`}
                 >
-              </div>
+                  <div class="flex items-center gap-x-3">
+                    <input
+                      type="checkbox"
+                      name={`todo-item-${todoIndex}`}
+                      id={`todo-item-${todoIndex}`}
+                      checked={todo.is_completed}
+                      class="cursor-pointer"
+                      on:change={(event) => {
+                        handleTodoToggleStatus(event, todoIndex);
+                      }}
+                    />
+                    <label
+                      for={`todo-item-${todoIndex}`}
+                      class="text-xl text-slate-500 cursor-pointer"
+                      >{todo.text}</label
+                    >
+                  </div>
 
-              <div class="flex items-center">
-                <button
-                  class="text-slate-300 hover:text-red-500 duration-200"
-                  on:click={() => handleTodoRemove(todoIndex)}><X /></button
+                  <div class="flex items-center">
+                    <button
+                      class="text-slate-300 hover:text-red-500 duration-200"
+                      on:click={() => handleTodoRemove(todoIndex)}><X /></button
+                    >
+                  </div>
+                </div>
+                <span class="text-xs text-slate-400"
+                  ><em
+                    >Created: {format(
+                      todo.created_at,
+                      "MM/dd/yyyy HH:mm:ss"
+                    )}</em
+                  ></span
                 >
-              </div>
-            </div>
-            <span class="text-xs text-slate-400"
-              ><em>Created: {format(todo.created_at, "MM/dd/yyyy")}</em></span
-            >
-          </li>
-        {/each}
-      </ul>
-    {:else}
-      <p class="text-slate-400 font-light">No todos available.</p>
-    {/if}
+              </li>
+            {/if}
+          {/each}
+        </ul>
+      {:else}
+        <p class="text-slate-400 font-light">No todos available.</p>
+      {/if}
+    </div>
+
+    <hr />
+
+    <div class="py-4">
+      <h5 class="text-slate-400">Filters</h5>
+      <p class="text-slate-400 text-xs mb-4">
+        Filter out the list of todo items based on their status.
+      </p>
+
+      <div class="flex items-center gap-2">
+        <Badge
+          badgeText="All"
+          isActive={activeFilter === "all"}
+          on:handleSelectBadge={() => (activeFilter = "all")}
+        />
+        <Badge
+          badgeText="Active"
+          isActive={activeFilter === "active"}
+          on:handleSelectBadge={() => (activeFilter = "active")}
+        />
+        <Badge
+          badgeText="Completed"
+          isActive={activeFilter === "completed"}
+          on:handleSelectBadge={() => (activeFilter = "completed")}
+        />
+      </div>
+    </div>
   </div>
 </main>
