@@ -1,13 +1,16 @@
 <script>
-  import { X } from "lucide-svelte";
+  import { OctagonAlert, X } from "lucide-svelte";
   import { Toaster, toast } from "svelte-sonner";
   import { format } from "date-fns";
   import { onMount } from "svelte";
   import Badge from "./lib/components/Badge.svelte";
+  import ModalConfirm from "./lib/components/ModalConfirm.svelte";
 
   let todos = [];
   let activeFilter = "all";
   let todoText = "";
+  let showDeleteTodoModal = false;
+  let selectedTodoIndex = null;
 
   onMount(() => {
     // read todos from local storage
@@ -53,6 +56,10 @@
 
     // update the todos list
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
+
+    // clear out the selected todo index and close the modal
+    selectedTodoIndex = null;
+    showDeleteTodoModal = false;
   }
 
   function handleTodoToggleStatus(event, todoIndex) {
@@ -81,7 +88,7 @@
   // todo: mark todos as completed / not completed [x]
   // todo: filter the list of todos: [x]
   // todo: check all todos at once [x]
-  // todo: add double confirmation modal for todo item removal
+  // todo: add double confirmation modal for todo item removal [x]
 
   $: {
     console.log("TODOS: ", todos);
@@ -153,7 +160,10 @@
                   <div class="flex items-center">
                     <button
                       class="text-slate-300 hover:text-red-500 duration-200"
-                      on:click={() => handleTodoRemove(todoIndex)}><X /></button
+                      on:click={() => {
+                        showDeleteTodoModal = true;
+                        selectedTodoIndex = todoIndex;
+                      }}><X /></button
                     >
                   </div>
                 </div>
@@ -201,4 +211,30 @@
       </div>
     </div>
   </div>
+
+  {#if showDeleteTodoModal}
+    <ModalConfirm
+      modalTitle="Are you sure you want to remove this item?"
+      modalDescription="Removing this item is an irreverisble action."
+    >
+      <OctagonAlert
+        slot="modal-icon"
+        class="text-red-500 size-20 mx-auto my-4"
+      />
+      <div
+        class="flex justify-center items-center my-4 gap-3"
+        slot="modal-actions"
+      >
+        <button
+          class="p-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-400 text-sm duration-200"
+          on:click={() => (showDeleteTodoModal = false)}>Cancel</button
+        >
+        <button
+          class="p-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-sm duration-200"
+          on:click={() => handleTodoRemove(selectedTodoIndex)}
+          >Yes, Delete</button
+        >
+      </div>
+    </ModalConfirm>
+  {/if}
 </main>
