@@ -22,7 +22,6 @@
   });
 
   function handleTodoAdd(event) {
-    event.preventDefault();
     const todoTextField = event.target.elements["todo"];
 
     // Prevent adding empty todos
@@ -34,9 +33,13 @@
     // note: svelte reactivity is triggered by ASSIGNMENTS
     // therefor array methods such as push, pop, etc. wont work
     // and we must reassign the value
+    const nextTodoID =
+      todos.length > 0 ? Math.max(...todos.map((todo) => todo.id)) + 1 : 1;
+
     todos = [
       ...todos,
       {
+        id: nextTodoID,
         text: todoTextField.value,
         created_at: new Date(),
         is_completed: false,
@@ -51,6 +54,7 @@
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
+  // TODO: update to make use of the unique ID
   function handleTodoRemove(todoIndex) {
     const updatedTodos = [...todos];
     updatedTodos.splice(todoIndex, 1);
@@ -65,8 +69,8 @@
     showDeleteTodoModal = false;
   }
 
+  // TODO: Update to make use of the unique ID
   function handleTodoToggleStatus(event, todoIndex) {
-    console.log(event);
     const isChecked = event.target.checked;
 
     const updatedTodos = [...todos];
@@ -88,6 +92,7 @@
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
+  // TODO: Update to make use of the unique ID
   function handleUpdateTodo(event) {
     const todoTextField = event.target.elements["todo-edit"];
 
@@ -120,9 +125,8 @@
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
-  $: {
-    console.log("TODOS: ", todos);
-  }
+  // reactive state - anytime the "todos" state updates, this is recalculated
+  $: nonCompletedTodosCount = todos.filter((todo) => !todo.is_completed).length;
 </script>
 
 <Toaster richColors />
@@ -132,7 +136,7 @@
   >
     <h1 class="font-semibold text-xl text-slate-400">Todos</h1>
 
-    <form action="#" on:submit={handleTodoAdd}>
+    <form action="#" on:submit|preventDefault={handleTodoAdd}>
       <input
         name="todo"
         type="text"
@@ -141,21 +145,11 @@
         bind:value={todoText}
       />
 
-      <div class="flex justify-between items-center">
-        <button
-          disabled={!todoText}
-          class="p-2 my-4 bg-emerald-400 text-white rounded hover:bg-emerald-600 disabled:bg-slate-300 disabled:text-slate-50 duration-300"
-          >Add Todo</button
-        >
-
-        {#if todos.length > 0 && todos.some((todo) => !todo.is_completed)}
-          <button
-            on:click={handleMarkAllTodosAsCompleted}
-            class="p-2 my-4 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:text-slate-50 duration-300"
-            >Mark all as completed</button
-          >
-        {/if}
-      </div>
+      <button
+        disabled={!todoText}
+        class="p-2 my-4 bg-emerald-400 text-white rounded hover:bg-emerald-600 disabled:bg-slate-300 disabled:text-slate-50 duration-300"
+        >Add Todo</button
+      >
     </form>
 
     <hr />
@@ -189,6 +183,20 @@
     </div>
 
     <hr />
+
+    {#if nonCompletedTodosCount > 0}
+      <div class="flex justify-between items-center my-4">
+        <p class="m-0 text-slate-400 font-light">
+          {nonCompletedTodosCount} todos remaining
+        </p>
+        <button
+          on:click={handleMarkAllTodosAsCompleted}
+          class="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:text-slate-50 duration-300"
+          >Mark all as completed</button
+        >
+      </div>
+      <hr />
+    {/if}
 
     <div class="py-4">
       <h5 class="text-slate-400">Filters</h5>
