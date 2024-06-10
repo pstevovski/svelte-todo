@@ -66,15 +66,19 @@
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
-  function handleTodoToggleStatus(todoIndex) {
+  function handleTodoToggleStatus(event, todoIndex) {
+    const isChecked = event.target.checked;
+
     const updatedTodos = [...todos];
-    updatedTodos[todoIndex].is_completed =
-      !updatedTodos[todoIndex].is_completed;
+    updatedTodos[todoIndex].is_completed = isChecked;
     todos = updatedTodos;
+
+    // update the list of saved todos with the updated status
+    localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
   // todo: presist in local storage [x]
-  // todo: mark todos as completed / not completed
+  // todo: mark todos as completed / not completed [x]
   // todo: filter the list of todos:
   // - all
   // - only completed
@@ -117,20 +121,26 @@
             <div
               class={`flex items-center justify-between ${todo.is_completed ? "line-through decoration-slate-500" : ""}`}
             >
-              <span class="text-slate-500">{todo.text}</span>
+              <div class="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  name={`todo-item-${todoIndex}`}
+                  id={`todo-item-${todoIndex}`}
+                  checked={todo.is_completed}
+                  on:change={(event) => {
+                    handleTodoToggleStatus(event, todoIndex);
+                  }}
+                />
+                <label
+                  for={`todo-item-${todoIndex}`}
+                  class="text-xl text-slate-500">{todo.text}</label
+                >
+              </div>
 
               <div class="flex items-center">
-                <button on:click={() => handleTodoToggleStatus(todoIndex)}>
-                  {#if !todo.is_completed}
-                    <CircleCheck class="text-emerald-400" />
-                  {:else}
-                    <CircleX />
-                  {/if}
-                </button>
                 <button
                   class="text-red-500"
-                  on:click={() => handleTodoRemove(todoIndex)}
-                  ><Trash2 /></button
+                  on:click={() => handleTodoRemove(todo)}><Trash2 /></button
                 >
               </div>
             </div>
