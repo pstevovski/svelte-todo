@@ -1,5 +1,5 @@
 <script>
-  import { Trash2, CircleCheck, CircleX } from "lucide-svelte";
+  import { X } from "lucide-svelte";
   import { Toaster, toast } from "svelte-sonner";
   import { format } from "date-fns";
   import { onMount } from "svelte";
@@ -43,22 +43,9 @@
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
-  // todo: make it work based on index
-  function handleTodoRemove(todo) {
-    const todoToBeRemoved = todos.findIndex((existingTodo) => {
-      return existingTodo.text.toLowerCase() === todo.text.toLowerCase();
-    });
-
-    // exit if item cannot be found
-    if (todoToBeRemoved < 0) {
-      toast.error("The targeted todo was not found!");
-
-      return;
-    }
-
-    // remove the item
+  function handleTodoRemove(todoIndex) {
     const updatedTodos = [...todos];
-    updatedTodos.splice(todoToBeRemoved, 1);
+    updatedTodos.splice(todoIndex, 1);
     todos = updatedTodos;
     toast.success("Successfully removed todo!");
 
@@ -83,6 +70,8 @@
   // - all
   // - only completed
   // - only not completed
+  // todo: check all todos at once
+  // todo: add double confirmation modal for todo item removal
 
   $: {
     console.log("TODOS: ", todos);
@@ -121,26 +110,28 @@
             <div
               class={`flex items-center justify-between ${todo.is_completed ? "line-through decoration-slate-500" : ""}`}
             >
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-x-3">
                 <input
                   type="checkbox"
                   name={`todo-item-${todoIndex}`}
                   id={`todo-item-${todoIndex}`}
                   checked={todo.is_completed}
+                  class="cursor-pointer"
                   on:change={(event) => {
                     handleTodoToggleStatus(event, todoIndex);
                   }}
                 />
                 <label
                   for={`todo-item-${todoIndex}`}
-                  class="text-xl text-slate-500">{todo.text}</label
+                  class="text-xl text-slate-500 cursor-pointer"
+                  >{todo.text}</label
                 >
               </div>
 
               <div class="flex items-center">
                 <button
-                  class="text-red-500"
-                  on:click={() => handleTodoRemove(todo)}><Trash2 /></button
+                  class="text-slate-300 hover:text-red-500 duration-200"
+                  on:click={() => handleTodoRemove(todoIndex)}><X /></button
                 >
               </div>
             </div>
