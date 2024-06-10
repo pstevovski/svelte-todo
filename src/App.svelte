@@ -5,11 +5,14 @@
   import { onMount } from "svelte";
   import Badge from "./lib/components/Badge.svelte";
   import ModalConfirm from "./lib/components/ModalConfirm.svelte";
+  import TodoItem from "./lib/components/TodoItem.svelte";
+  import Modal from "./lib/components/Modal.svelte";
 
   let todos = [];
   let activeFilter = "all";
   let todoText = "";
   let showDeleteTodoModal = false;
+  let showEditTodoModal = false;
   let selectedTodoIndex = null;
 
   onMount(() => {
@@ -63,6 +66,7 @@
   }
 
   function handleTodoToggleStatus(event, todoIndex) {
+    console.log(event);
     const isChecked = event.target.checked;
 
     const updatedTodos = [...todos];
@@ -84,11 +88,30 @@
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
-  // todo: presist in local storage [x]
-  // todo: mark todos as completed / not completed [x]
-  // todo: filter the list of todos: [x]
-  // todo: check all todos at once [x]
-  // todo: add double confirmation modal for todo item removal [x]
+  function handleUpdateTodo(event) {
+    const todoTextField = event.target.elements["todo-edit"];
+
+    // Prevent adding empty todos
+    if (!todoTextField.value) {
+      toast.error("Updated todo must not be empty!");
+      return;
+    }
+
+    todos[selectedTodoIndex] = {
+      ...todos[selectedTodoIndex],
+      text: todoTextField.value,
+    };
+
+    // clear out the field
+    toast.success("Todo item successfully updated!");
+
+    // save to local storage
+    localStorage.setItem("svelte-todos", JSON.stringify(todos));
+
+    // reset the selected todo details
+    selectedTodoIndex = null;
+    showEditTodoModal = false;
+  }
 
   $: {
     console.log("TODOS: ", todos);
@@ -135,47 +158,21 @@
         <ul>
           {#each todos as todo, todoIndex}
             {#if activeFilter === "all" || (activeFilter === "active" && !todo.is_completed) || (activeFilter === "completed" && todo.is_completed)}
-              <li class="p-2">
-                <div
-                  class={`flex items-center justify-between ${todo.is_completed ? "line-through decoration-slate-500" : ""}`}
-                >
-                  <div class="flex items-center gap-x-3">
-                    <input
-                      type="checkbox"
-                      name={`todo-item-${todoIndex}`}
-                      id={`todo-item-${todoIndex}`}
-                      checked={todo.is_completed}
-                      class="cursor-pointer"
-                      on:change={(event) => {
-                        handleTodoToggleStatus(event, todoIndex);
-                      }}
-                    />
-                    <label
-                      for={`todo-item-${todoIndex}`}
-                      class="text-xl text-slate-500 cursor-pointer"
-                      >{todo.text}</label
-                    >
-                  </div>
-
-                  <div class="flex items-center">
-                    <button
-                      class="text-slate-300 hover:text-red-500 duration-200"
-                      on:click={() => {
-                        showDeleteTodoModal = true;
-                        selectedTodoIndex = todoIndex;
-                      }}><X /></button
-                    >
-                  </div>
-                </div>
-                <span class="text-xs text-slate-400"
-                  ><em
-                    >Created: {format(
-                      todo.created_at,
-                      "MM/dd/yyyy HH:mm:ss"
-                    )}</em
-                  ></span
-                >
-              </li>
+              <TodoItem
+                {todo}
+                {todoIndex}
+                on:handleToggleStatus={(event) => {
+                  handleTodoToggleStatus(event.detail.originalEvent, todoIndex);
+                }}
+                on:handleOpenEditModal={() => {
+                  showEditTodoModal = true;
+                  selectedTodoIndex = todoIndex;
+                }}
+                on:handleOpenDeleteModal={() => {
+                  showDeleteTodoModal = true;
+                  selectedTodoIndex = todoIndex;
+                }}
+              />
             {/if}
           {/each}
         </ul>
@@ -236,5 +233,32 @@
         >
       </div>
     </ModalConfirm>
+  {/if}
+
+  {#if showEditTodoModal}
+    <Modal>
+      <form action="#" on:submit|preventDefault={handleUpdateTodo}>
+        <h1 class="text-center text-lg text-slate-600 font-bold">Edit</h1>
+
+        <input
+          name="todo-edit"
+          class="border rounded p-2 my-2 w-full text-slate-700 text-sm"
+          type="text"
+          value={todos[selectedTodoIndex].text}
+        />
+
+        <div class="flex justify-center items-center my-4 gap-3">
+          <button
+            type="button"
+            class="p-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-400 text-sm duration-200"
+            on:click={() => (showEditTodoModal = false)}>Cancel</button
+          >
+          <button
+            class="p-2 rounded-md bg-emerald-400 hover:bg-emerald-500 text-white text-sm duration-200"
+            >Update</button
+          >
+        </div>
+      </form>
+    </Modal>
   {/if}
 </main>
