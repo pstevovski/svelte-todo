@@ -17,8 +17,10 @@
     "vite": "^5.2.0"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "lucide-svelte": "^0.390.0",
-    "svelte-sonner": "^0.3.24"
+    "svelte-sonner": "^0.3.24",
+    "tailwind-merge": "^2.3.0"
   }
 }
