@@ -66,10 +66,21 @@
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
+  function handleMarkAllTodosAsCompleted() {
+    todos = todos.map((todo) => {
+      return {
+        ...todo,
+        is_completed: true,
+      };
+    });
+
+    localStorage.setItem("svelte-todos", JSON.stringify(todos));
+  }
+
   // todo: presist in local storage [x]
   // todo: mark todos as completed / not completed [x]
   // todo: filter the list of todos: [x]
-  // todo: check all todos at once
+  // todo: check all todos at once [x]
   // todo: add double confirmation modal for todo item removal
 
   $: {
@@ -93,11 +104,21 @@
         bind:value={todoText}
       />
 
-      <button
-        disabled={!todoText}
-        class="p-2 my-4 bg-emerald-400 text-white rounded hover:bg-emerald-600 disabled:bg-slate-300 disabled:text-slate-50 duration-300"
-        >Add Todo</button
-      >
+      <div class="flex justify-between items-center">
+        <button
+          disabled={!todoText}
+          class="p-2 my-4 bg-emerald-400 text-white rounded hover:bg-emerald-600 disabled:bg-slate-300 disabled:text-slate-50 duration-300"
+          >Add Todo</button
+        >
+
+        {#if todos.length > 0 && todos.some((todo) => !todo.is_completed)}
+          <button
+            on:click={handleMarkAllTodosAsCompleted}
+            class="p-2 my-4 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:text-slate-50 duration-300"
+            >Mark all as completed</button
+          >
+        {/if}
+      </div>
     </form>
 
     <hr />
