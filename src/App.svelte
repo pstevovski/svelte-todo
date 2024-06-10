@@ -44,7 +44,7 @@
     ];
 
     // clear out the field
-    todoTextField.value = "";
+    todoText = "";
     toast.success("New todo added to the list!");
 
     // save to local storage
@@ -111,6 +111,13 @@
     // reset the selected todo details
     selectedTodoIndex = null;
     showEditTodoModal = false;
+  }
+
+  function handleClearCompletedTodos() {
+    todos = todos.filter((todo) => !todo.is_completed);
+
+    // update the persisting list
+    localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
   $: {
@@ -189,22 +196,31 @@
         Filter out the list of todo items based on their status.
       </p>
 
-      <div class="flex items-center gap-2">
-        <Badge
-          badgeText="All"
-          isActive={activeFilter === "all"}
-          on:handleSelectBadge={() => (activeFilter = "all")}
-        />
-        <Badge
-          badgeText="Active"
-          isActive={activeFilter === "active"}
-          on:handleSelectBadge={() => (activeFilter = "active")}
-        />
-        <Badge
-          badgeText="Completed"
-          isActive={activeFilter === "completed"}
-          on:handleSelectBadge={() => (activeFilter = "completed")}
-        />
+      <div class="flex justify-between items-center gap-2">
+        <div class="flex items-center gap-2">
+          <Badge
+            badgeText="All"
+            isActive={activeFilter === "all"}
+            on:handleSelectBadge={() => (activeFilter = "all")}
+          />
+          <Badge
+            badgeText="Active"
+            isActive={activeFilter === "active"}
+            on:handleSelectBadge={() => (activeFilter = "active")}
+          />
+          <Badge
+            badgeText="Completed"
+            isActive={activeFilter === "completed"}
+            on:handleSelectBadge={() => (activeFilter = "completed")}
+          />
+        </div>
+
+        {#if todos.some((todo) => todo.is_completed)}
+          <button
+            class="p-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm duration-200"
+            on:click={handleClearCompletedTodos}>Clear Completed</button
+          >
+        {/if}
       </div>
     </div>
   </div>
