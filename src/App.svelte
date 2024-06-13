@@ -125,8 +125,17 @@
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
-  // reactive state - anytime the "todos" state updates, this is recalculated
+  function handleFilterTodos(todos, filter) {
+    if (filter === "all") return todos;
+
+    return todos.filter((todo) => {
+      return filter === "active" ? !todo.is_completed : todo.is_completed;
+    });
+  }
+
+  // reactive state - anytime some of the values used are updated, the reactive state will be updated too
   $: nonCompletedTodosCount = todos.filter((todo) => !todo.is_completed).length;
+  $: filteredTodos = handleFilterTodos(todos, activeFilter);
 </script>
 
 <Toaster richColors />
@@ -157,24 +166,22 @@
     <div class="my-4">
       {#if todos.length > 0}
         <ul>
-          {#each todos as todo, todoIndex}
-            {#if activeFilter === "all" || (activeFilter === "active" && !todo.is_completed) || (activeFilter === "completed" && todo.is_completed)}
-              <TodoItem
-                {todo}
-                {todoIndex}
-                on:handleToggleStatus={(event) => {
-                  handleTodoToggleStatus(event.detail.originalEvent, todoIndex);
-                }}
-                on:handleOpenEditModal={() => {
-                  showEditTodoModal = true;
-                  selectedTodoIndex = todoIndex;
-                }}
-                on:handleOpenDeleteModal={() => {
-                  showDeleteTodoModal = true;
-                  selectedTodoIndex = todoIndex;
-                }}
-              />
-            {/if}
+          {#each filteredTodos as todo, todoIndex}
+            <TodoItem
+              {todo}
+              {todoIndex}
+              on:handleToggleStatus={(event) => {
+                handleTodoToggleStatus(event.detail.originalEvent, todoIndex);
+              }}
+              on:handleOpenEditModal={() => {
+                showEditTodoModal = true;
+                selectedTodoIndex = todoIndex;
+              }}
+              on:handleOpenDeleteModal={() => {
+                showDeleteTodoModal = true;
+                selectedTodoIndex = todoIndex;
+              }}
+            />
           {/each}
         </ul>
       {:else}
