@@ -30,6 +30,16 @@
       return;
     }
 
+    // Prevent adding todos with the exact same text
+    const isAlreadyExisting = todos.find((todo) => {
+      return todo.text.toLowerCase() === todoTextField.value.toLowerCase();
+    });
+
+    if (isAlreadyExisting) {
+      toast.info("This todo item already exists!");
+      return;
+    }
+
     // note: svelte reactivity is triggered by ASSIGNMENTS
     // therefor array methods such as push, pop, etc. wont work
     // and we must reassign the value
@@ -40,7 +50,7 @@
       ...todos,
       {
         id: nextTodoID,
-        text: todoTextField.value,
+        text: todoTextField.value.trim(),
         created_at: new Date(),
         is_completed: false,
       },
