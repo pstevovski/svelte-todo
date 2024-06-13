@@ -236,7 +236,7 @@
       <div>
         {#if paginatedTodos.length > 0}
           <ul>
-            {#each paginatedTodos as todo, todoIndex}
+            {#each paginatedTodos as todo, todoIndex (todo.id)}
               <TodoItem
                 {todo}
                 {todoIndex}

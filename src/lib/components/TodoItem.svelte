@@ -2,6 +2,8 @@
   import { format } from "date-fns";
   import { createEventDispatcher } from "svelte";
   import { Pencil, X } from "lucide-svelte";
+  import { slide } from "svelte/transition";
+  import { quadInOut } from "svelte/easing";
 
   export let todo;
   export let todoIndex;
@@ -9,7 +11,10 @@
   const dispatch = createEventDispatcher();
 </script>
 
-<li class="p-2">
+<li
+  class="p-2"
+  transition:slide={{ duration: 500, axis: "y", easing: quadInOut }}
+>
   <div
     class={`flex items-center justify-between ${todo.is_completed ? "line-through decoration-slate-500" : ""}`}
   >
