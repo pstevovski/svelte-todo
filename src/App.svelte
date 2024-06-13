@@ -191,75 +191,77 @@
       >
     </form>
 
-    <hr />
-
     <!-- FILTERS -->
-    <div class="py-4">
-      <h5 class="text-slate-400">Filters</h5>
-      <p class="text-slate-400 text-xs mb-4">
-        Filter out the list of todo items based on their status.
-      </p>
+    {#if todos.length > 0}
+      <hr />
 
-      <div class="flex justify-between items-center gap-2">
-        <div class="flex items-center gap-2">
-          <Badge
-            badgeText={`All (${totalTodos})`}
-            isActive={activeFilter === "all"}
-            on:handleSelectBadge={() => (activeFilter = "all")}
-          />
-          <Badge
-            badgeText={`Active (${activeTodos})`}
-            isActive={activeFilter === "active"}
-            on:handleSelectBadge={() => (activeFilter = "active")}
-          />
-          <Badge
-            badgeText={`Completed (${completedTodos})`}
-            isActive={activeFilter === "completed"}
-            on:handleSelectBadge={() => (activeFilter = "completed")}
-          />
+      <div class="py-4">
+        <h5 class="text-slate-400">Filters</h5>
+        <p class="text-slate-400 text-xs mb-4">
+          Filter out the list of todo items based on their status.
+        </p>
+
+        <div class="flex justify-between items-center gap-2">
+          <div class="flex items-center gap-2">
+            <Badge
+              badgeText={`All (${totalTodos})`}
+              isActive={activeFilter === "all"}
+              on:handleSelectBadge={() => (activeFilter = "all")}
+            />
+            <Badge
+              badgeText={`Active (${activeTodos})`}
+              isActive={activeFilter === "active"}
+              on:handleSelectBadge={() => (activeFilter = "active")}
+            />
+            <Badge
+              badgeText={`Completed (${completedTodos})`}
+              isActive={activeFilter === "completed"}
+              on:handleSelectBadge={() => (activeFilter = "completed")}
+            />
+          </div>
+
+          {#if todos.some((todo) => todo.is_completed)}
+            <button
+              class="p-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm duration-200"
+              on:click={handleClearCompletedTodos}>Clear Completed</button
+            >
+          {/if}
         </div>
+      </div>
 
-        {#if todos.some((todo) => todo.is_completed)}
-          <button
-            class="p-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm duration-200"
-            on:click={handleClearCompletedTodos}>Clear Completed</button
-          >
+      <!-- TODOS -->
+      <div>
+        {#if paginatedTodos.length > 0}
+          <ul>
+            {#each paginatedTodos as todo, todoIndex}
+              <TodoItem
+                {todo}
+                {todoIndex}
+                on:handleToggleStatus={(event) => {
+                  handleTodoToggleStatus(event.detail.originalEvent, todoIndex);
+                }}
+                on:handleOpenEditModal={() => {
+                  showEditTodoModal = true;
+                  selectedTodoIndex = todoIndex;
+                }}
+                on:handleOpenDeleteModal={() => {
+                  showDeleteTodoModal = true;
+                  selectedTodoIndex = todoIndex;
+                }}
+              />
+            {/each}
+          </ul>
+        {:else}
+          <p class="text-slate-400 font-light">
+            {#if activeFilter === "all"}
+              No todos available.
+            {:else}
+              No {activeFilter} todos.
+            {/if}
+          </p>
         {/if}
       </div>
-    </div>
-
-    <!-- TODOS -->
-    <div>
-      {#if paginatedTodos.length > 0}
-        <ul>
-          {#each paginatedTodos as todo, todoIndex}
-            <TodoItem
-              {todo}
-              {todoIndex}
-              on:handleToggleStatus={(event) => {
-                handleTodoToggleStatus(event.detail.originalEvent, todoIndex);
-              }}
-              on:handleOpenEditModal={() => {
-                showEditTodoModal = true;
-                selectedTodoIndex = todoIndex;
-              }}
-              on:handleOpenDeleteModal={() => {
-                showDeleteTodoModal = true;
-                selectedTodoIndex = todoIndex;
-              }}
-            />
-          {/each}
-        </ul>
-      {:else}
-        <p class="text-slate-400 font-light">
-          {#if activeFilter === "all"}
-            No todos available.
-          {:else}
-            No {activeFilter} todos.
-          {/if}
-        </p>
-      {/if}
-    </div>
+    {/if}
 
     <Pagination
       dataToBePaginated={filteredTodos}
