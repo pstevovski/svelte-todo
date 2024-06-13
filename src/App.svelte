@@ -7,6 +7,7 @@
   import ModalConfirm from "./lib/components/ModalConfirm.svelte";
   import TodoItem from "./lib/components/TodoItem.svelte";
   import Modal from "./lib/components/Modal.svelte";
+  import Pagination from "./lib/components/Pagination.svelte";
 
   let todos = [];
   let activeFilter = "all";
@@ -146,6 +147,19 @@
   // reactive state - anytime some of the values used are updated, the reactive state will be updated too
   $: nonCompletedTodosCount = todos.filter((todo) => !todo.is_completed).length;
   $: filteredTodos = handleFilterTodos(todos, activeFilter);
+
+  /*======================
+    PAGINATION
+  ========================*/
+  let currentPage = 1;
+  let itemsPerPage = 10;
+  $: paginatedTodos = handlePaginateTodos(currentPage, filteredTodos);
+
+  function handlePaginateTodos(currentPage, filteredTodos) {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = currentPage * itemsPerPage;
+    return filteredTodos.slice(startIndex, endIndex);
+  }
 </script>
 
 <Toaster richColors />
@@ -176,7 +190,7 @@
     <div class="my-4">
       {#if todos.length > 0}
         <ul>
-          {#each filteredTodos as todo, todoIndex}
+          {#each paginatedTodos as todo, todoIndex}
             <TodoItem
               {todo}
               {todoIndex}
@@ -198,6 +212,16 @@
         <p class="text-slate-400 font-light">No todos available.</p>
       {/if}
     </div>
+
+    <Pagination
+      {currentPage}
+      dataToBePaginated={filteredTodos}
+      {itemsPerPage}
+      on:handlePageChange={({ detail }) => {
+        console.log("page change", detail.page);
+        currentPage = detail.page;
+      }}
+    />
 
     <hr />
 
