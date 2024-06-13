@@ -92,17 +92,6 @@
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
-  function handleMarkAllTodosAsCompleted() {
-    todos = todos.map((todo) => {
-      return {
-        ...todo,
-        is_completed: true,
-      };
-    });
-
-    localStorage.setItem("svelte-todos", JSON.stringify(todos));
-  }
-
   // TODO: Update to make use of the unique ID
   function handleUpdateTodo(event) {
     const todoTextField = event.target.elements["todo-edit"];
@@ -132,8 +121,11 @@
   function handleClearCompletedTodos() {
     todos = todos.filter((todo) => !todo.is_completed);
 
-    // update the persisting list
+    // Update the persisting list
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
+
+    // Close the modal
+    showClearCompletedModal = false;
   }
 
   function handleFilterTodos(todos, filter) {
@@ -146,6 +138,11 @@
 
   // reactive state - anytime some of the values used are updated, the reactive state will be updated too
   $: filteredTodos = handleFilterTodos(todos, activeFilter);
+
+  /*======================
+    MODALS
+  ========================*/
+  let showClearCompletedModal = false;
 
   /*======================
     TODOS COUNTER
@@ -180,7 +177,7 @@
         name="todo"
         type="text"
         placeholder="Todo..."
-        class="border rounded p-2 my-2 w-full"
+        class="border rounded p-2 my-2 w-full text-slate-400 font-light"
         bind:value={todoText}
       />
 
@@ -191,10 +188,10 @@
       >
     </form>
 
-    <!-- FILTERS -->
     {#if todos.length > 0}
       <hr />
 
+      <!-- FILTERS -->
       <div class="py-4">
         <h5 class="text-slate-400">Filters</h5>
         <p class="text-slate-400 text-xs mb-4">
@@ -223,7 +220,8 @@
           {#if todos.some((todo) => todo.is_completed)}
             <button
               class="p-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm duration-200"
-              on:click={handleClearCompletedTodos}>Clear Completed</button
+              on:click={() => (showClearCompletedModal = true)}
+              >Clear Completed</button
             >
           {/if}
         </div>
@@ -292,6 +290,31 @@
           class="p-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-sm duration-200"
           on:click={() => handleTodoRemove(selectedTodoIndex)}
           >Yes, Delete</button
+        >
+      </div>
+    </ModalConfirm>
+  {/if}
+
+  {#if showClearCompletedModal}
+    <ModalConfirm
+      modalTitle="Are you sure you want to clear out all completed items?"
+      modalDescription="This action is irreverisble."
+    >
+      <OctagonAlert
+        slot="modal-icon"
+        class="text-red-500 size-20 mx-auto my-4"
+      />
+      <div
+        class="flex justify-center items-center my-4 gap-3"
+        slot="modal-actions"
+      >
+        <button
+          class="p-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-400 text-sm duration-200"
+          on:click={() => (showDeleteTodoModal = false)}>Cancel</button
+        >
+        <button
+          class="p-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-sm duration-200"
+          on:click={handleClearCompletedTodos}>Yes, Clear</button
         >
       </div>
     </ModalConfirm>
