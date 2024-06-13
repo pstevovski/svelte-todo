@@ -145,8 +145,14 @@
   }
 
   // reactive state - anytime some of the values used are updated, the reactive state will be updated too
-  $: nonCompletedTodosCount = todos.filter((todo) => !todo.is_completed).length;
   $: filteredTodos = handleFilterTodos(todos, activeFilter);
+
+  /*======================
+    TODOS COUNTER
+  ========================*/
+  $: totalTodos = todos.length;
+  $: activeTodos = todos.filter((todo) => !todo.is_completed).length;
+  $: completedTodos = todos.filter((todo) => todo.is_completed).length;
 
   /*======================
     PAGINATION
@@ -187,8 +193,44 @@
 
     <hr />
 
-    <div class="my-4">
-      {#if todos.length > 0}
+    <!-- FILTERS -->
+    <div class="py-4">
+      <h5 class="text-slate-400">Filters</h5>
+      <p class="text-slate-400 text-xs mb-4">
+        Filter out the list of todo items based on their status.
+      </p>
+
+      <div class="flex justify-between items-center gap-2">
+        <div class="flex items-center gap-2">
+          <Badge
+            badgeText={`All (${totalTodos})`}
+            isActive={activeFilter === "all"}
+            on:handleSelectBadge={() => (activeFilter = "all")}
+          />
+          <Badge
+            badgeText={`Active (${activeTodos})`}
+            isActive={activeFilter === "active"}
+            on:handleSelectBadge={() => (activeFilter = "active")}
+          />
+          <Badge
+            badgeText={`Completed (${completedTodos})`}
+            isActive={activeFilter === "completed"}
+            on:handleSelectBadge={() => (activeFilter = "completed")}
+          />
+        </div>
+
+        {#if todos.some((todo) => todo.is_completed)}
+          <button
+            class="p-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm duration-200"
+            on:click={handleClearCompletedTodos}>Clear Completed</button
+          >
+        {/if}
+      </div>
+    </div>
+
+    <!-- TODOS -->
+    <div>
+      {#if paginatedTodos.length > 0}
         <ul>
           {#each paginatedTodos as todo, todoIndex}
             <TodoItem
@@ -209,69 +251,22 @@
           {/each}
         </ul>
       {:else}
-        <p class="text-slate-400 font-light">No todos available.</p>
+        <p class="text-slate-400 font-light">
+          {#if activeFilter === "all"}
+            No todos available.
+          {:else}
+            No {activeFilter} todos.
+          {/if}
+        </p>
       {/if}
     </div>
 
     <Pagination
-      {currentPage}
       dataToBePaginated={filteredTodos}
+      {currentPage}
       {itemsPerPage}
-      on:handlePageChange={({ detail }) => {
-        console.log("page change", detail.page);
-        currentPage = detail.page;
-      }}
+      on:handlePageChange={({ detail }) => (currentPage = detail.page)}
     />
-
-    <hr />
-
-    {#if nonCompletedTodosCount > 0}
-      <div class="flex justify-between items-center my-4">
-        <p class="m-0 text-slate-400 font-light">
-          {nonCompletedTodosCount} todos remaining
-        </p>
-        <button
-          on:click={handleMarkAllTodosAsCompleted}
-          class="p-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:text-slate-50 duration-300"
-          >Mark all as completed</button
-        >
-      </div>
-      <hr />
-    {/if}
-
-    <div class="py-4">
-      <h5 class="text-slate-400">Filters</h5>
-      <p class="text-slate-400 text-xs mb-4">
-        Filter out the list of todo items based on their status.
-      </p>
-
-      <div class="flex justify-between items-center gap-2">
-        <div class="flex items-center gap-2">
-          <Badge
-            badgeText="All"
-            isActive={activeFilter === "all"}
-            on:handleSelectBadge={() => (activeFilter = "all")}
-          />
-          <Badge
-            badgeText="Active"
-            isActive={activeFilter === "active"}
-            on:handleSelectBadge={() => (activeFilter = "active")}
-          />
-          <Badge
-            badgeText="Completed"
-            isActive={activeFilter === "completed"}
-            on:handleSelectBadge={() => (activeFilter = "completed")}
-          />
-        </div>
-
-        {#if todos.some((todo) => todo.is_completed)}
-          <button
-            class="p-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm duration-200"
-            on:click={handleClearCompletedTodos}>Clear Completed</button
-          >
-        {/if}
-      </div>
-    </div>
   </div>
 
   {#if showDeleteTodoModal}
