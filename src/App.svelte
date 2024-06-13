@@ -1,7 +1,6 @@
 <script>
-  import { OctagonAlert, X } from "lucide-svelte";
+  import { OctagonAlert } from "lucide-svelte";
   import { Toaster, toast } from "svelte-sonner";
-  import { format } from "date-fns";
   import { onMount } from "svelte";
   import Badge from "./lib/components/Badge.svelte";
   import ModalConfirm from "./lib/components/ModalConfirm.svelte";
@@ -12,12 +11,10 @@
   let todos = [];
   let activeFilter = "all";
   let todoText = "";
-  let showDeleteTodoModal = false;
-  let showEditTodoModal = false;
-  let selectedTodoIndex = null;
+  let selectedTodo = null;
 
+  // Read saved todos and populate the state
   onMount(() => {
-    // read todos from local storage
     const savedTodos = JSON.parse(localStorage.getItem("svelte-todos")) || [];
     todos = savedTodos;
   });
@@ -65,34 +62,36 @@
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
-  // TODO: update to make use of the unique ID
-  function handleTodoRemove(todoIndex) {
-    const updatedTodos = [...todos];
-    updatedTodos.splice(todoIndex, 1);
-    todos = updatedTodos;
+  function handleTodoRemove(id) {
+    todos = todos.filter((todo) => todo.id !== id);
     toast.success("Successfully removed todo!");
 
-    // update the todos list
+    // Update the saved todos list
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
 
-    // clear out the selected todo index and close the modal
-    selectedTodoIndex = null;
+    // Clear out the selected todo index and close the modal
+    selectedTodo = null;
     showDeleteTodoModal = false;
   }
 
-  // TODO: Update to make use of the unique ID
-  function handleTodoToggleStatus(event, todoIndex) {
+  function handleTodoToggleStatus(event, id) {
     const isChecked = event.target.checked;
+
+    const todoIndex = todos.findIndex((todo) => todo.id === id);
+
+    if (todoIndex < 0) {
+      toast.error("Targeted todo cannot be found!");
+      return;
+    }
 
     const updatedTodos = [...todos];
     updatedTodos[todoIndex].is_completed = isChecked;
     todos = updatedTodos;
 
-    // update the list of saved todos with the updated status
+    // Update the list of saved todos with the updated status
     localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
-  // TODO: Update to make use of the unique ID
   function handleUpdateTodo(event) {
     const todoTextField = event.target.elements["todo-edit"];
 
@@ -102,20 +101,23 @@
       return;
     }
 
-    todos[selectedTodoIndex] = {
-      ...todos[selectedTodoIndex],
+    const todoIndex = todos.findIndex((todo) => todo.id === selectedTodo.id);
+
+    if (todoIndex < 0) {
+      toast.error("Targeted todo cannot be found!");
+      return;
+    }
+
+    todos[todoIndex] = {
+      ...todos[todoIndex],
       text: todoTextField.value,
     };
 
-    // clear out the field
+    // Reset the selected todo details and update the saved list
     toast.success("Todo item successfully updated!");
-
-    // save to local storage
-    localStorage.setItem("svelte-todos", JSON.stringify(todos));
-
-    // reset the selected todo details
-    selectedTodoIndex = null;
+    selectedTodo = null;
     showEditTodoModal = false;
+    localStorage.setItem("svelte-todos", JSON.stringify(todos));
   }
 
   function handleClearCompletedTodos() {
@@ -128,6 +130,9 @@
     showClearCompletedModal = false;
   }
 
+  // This is a "reactive" state - anytime some of the values used are updated, the reactive state will be updated too
+  $: filteredTodos = handleFilterTodos(todos, activeFilter);
+
   function handleFilterTodos(todos, filter) {
     if (filter === "all") return todos;
 
@@ -136,13 +141,12 @@
     });
   }
 
-  // reactive state - anytime some of the values used are updated, the reactive state will be updated too
-  $: filteredTodos = handleFilterTodos(todos, activeFilter);
-
   /*======================
     MODALS
   ========================*/
   let showClearCompletedModal = false;
+  let showDeleteTodoModal = false;
+  let showEditTodoModal = false;
 
   /*======================
     TODOS COUNTER
@@ -166,6 +170,7 @@
 </script>
 
 <Toaster richColors />
+
 <main>
   <div
     class="p-6 bg-white rounded shadow-md border border-slate-100 max-w-[650px] w-full mx-auto my-4"
@@ -236,15 +241,15 @@
                 {todo}
                 {todoIndex}
                 on:handleToggleStatus={(event) => {
-                  handleTodoToggleStatus(event.detail.originalEvent, todoIndex);
+                  handleTodoToggleStatus(event.detail.originalEvent, todo.id);
                 }}
                 on:handleOpenEditModal={() => {
                   showEditTodoModal = true;
-                  selectedTodoIndex = todoIndex;
+                  selectedTodo = todo;
                 }}
                 on:handleOpenDeleteModal={() => {
                   showDeleteTodoModal = true;
-                  selectedTodoIndex = todoIndex;
+                  selectedTodo = todo;
                 }}
               />
             {/each}
@@ -288,8 +293,7 @@
         >
         <button
           class="p-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-sm duration-200"
-          on:click={() => handleTodoRemove(selectedTodoIndex)}
-          >Yes, Delete</button
+          on:click={() => handleTodoRemove(selectedTodo.id)}>Yes, Delete</button
         >
       </div>
     </ModalConfirm>
@@ -329,7 +333,7 @@
           name="todo-edit"
           class="border rounded p-2 my-2 w-full text-slate-700 text-sm"
           type="text"
-          value={todos[selectedTodoIndex].text}
+          value={selectedTodo.text}
         />
 
         <div class="flex justify-center items-center my-4 gap-3">
